@@ -30,33 +30,7 @@ class InitDB(CkanCommand):
         log.info("DB tables are setup")
 
 
-class GetAuthToken(CkanCommand):
-    """ Gets the auth token from Google and saves it as token.dat.
 
-    Usage: paster getauthtoken <credentials_file>
-
-    Where <credentials_file> is the file name containing the details
-    of your client authorized for your Google Analytics data
-    (known as credentials.json or client_secrets.json)
-    which is obtained from https://code.google.com/apis/console.
-    By default this is set to credentials.json
-    """
-    summary = __doc__.split('\n')[0]
-    usage = __doc__
-    max_args = 1
-    min_args = 0
-
-    def command(self):
-        """
-        In this case we don't want a valid service, but rather just to
-        force the user through the auth flow. We allow this to complete to
-        act as a form of verification instead of just getting the token and
-        assuming it is correct.
-        """
-        from ga_auth import init_service
-        init_service('token.dat',
-                      self.args[0] if self.args
-                                   else 'credentials.json')
 
 class FixTimePeriods(CkanCommand):
     """
@@ -99,6 +73,7 @@ class LoadAnalytics(CkanCommand):
         all         - data for all time
         latest      - (default) just the 'latest' data
         YYYY-MM     - just data for the specific month
+
     """
     summary = __doc__.split('\n')[0]
     usage = __doc__
@@ -116,7 +91,7 @@ class LoadAnalytics(CkanCommand):
         self.parser.add_option('-s', '--stat',
                                metavar="STAT",
                                dest='stat',
-                               help='Only calulcate a particular stat (or collection of stats)- one of: %s' %
+                               help='Only calculate a particular stat (or collection of stats)- one of: %s' %
                                     '|'.join(self.stat_names))
         self.token = ""
 
@@ -133,11 +108,9 @@ class LoadAnalytics(CkanCommand):
             return
 
         try:
-            self.token, svc = init_service(ga_token_filepath, None)
-        except TypeError:
-            print ('Have you correctly run the getauthtoken task and '
-                   'specified the correct token file in the CKAN config under '
-                   '"googleanalytics.token.filepath"?')
+            svc = init_service(ga_token_filepath)
+        except TypeError as e:
+            print ('Unable to create a service: {0}'.format(e))
             return
 
         downloader = DownloadAnalytics(svc, self.token, profile_id=get_profile_id(svc),

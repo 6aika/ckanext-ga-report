@@ -1,32 +1,28 @@
-import os
 import httplib2
 from apiclient.discovery import build
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.file import Storage
-from oauth2client.tools import run
+
 
 from pylons import config
+
+from oauth2client.service_account import ServiceAccountCredentials
 
 log = __import__('logging').getLogger(__name__)
 
 
-def _prepare_credentials(token_filename, credentials_filename):
+def _prepare_credentials(credentials_filename):
     """
     Either returns the user's oauth credentials or uses the credentials
     file to generate a token (by forcing the user to login in the browser)
     """
-    storage = Storage(token_filename)
-    credentials = storage.get()
-
-    if credentials is None or credentials.invalid:
-        flow = flow_from_clientsecrets(credentials_filename,
-            scope='https://www.googleapis.com/auth/analytics.readonly')
-        credentials = run(flow, storage)
-
+    scope = ['https://www.googleapis.com/auth/analytics.readonly']
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(
+        credentials_filename,
+        scopes=scope
+    )
     return credentials
 
 
-def init_service(token_file, credentials_file):
+def init_service(credentials_file):
     """
     Given a file containing the user's oauth token (and another with
     credentials in case we need to generate the token) will return a
@@ -36,10 +32,10 @@ def init_service(token_file, credentials_file):
     """
     http = httplib2.Http()
 
-    credentials = _prepare_credentials(token_file, credentials_file)
+    credentials = _prepare_credentials(credentials_file)
     http = credentials.authorize(http)  # authorize the http object
 
-    service = credentials.access_token, build('analytics', 'v3', http=http)
+    service = build('analytics', 'v3', http=http,cache_discovery=False)
     return service
 
 

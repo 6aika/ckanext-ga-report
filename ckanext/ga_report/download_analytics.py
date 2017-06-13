@@ -304,17 +304,22 @@ class DownloadAnalytics(object):
 
         try:
             from ga_auth import init_service
-            self.token, svc = init_service(ga_token_filepath, None)
+            self.service = init_service(ga_token_filepath)
         except Exception, auth_exception:
             log.error('OAuth refresh failed')
             log.exception(auth_exception)
             return dict(url=[])
 
-        headers = {'authorization': 'Bearer ' + self.token}
-        response = self._do_ga_request(params, headers)
+        #headers = {'authorization': 'Bearer ' + self.token}
+        headers = {}
+        #response = self._do_ga_request(params, headers)
+        log.info(params)
+        response = self.service.data().ga().get(ids=params.get('ids'), filters=params.get('filters'), dimensions=params.get('dimensions'),
+                                                start_date=params.get('start-date'), end_date=params.get('end-date'), max_results=params.get('max-results'),
+                                                start_index=1, sort=params.get('sort'), metrics=params.get('metrics')).execute()
         # allow any exceptions to bubble up
 
-        data_dict = response.json()
+        data_dict = response
 
         # If there are 0 results then the rows are missed off, so add it in
         if 'rows' not in data_dict:
@@ -332,7 +337,9 @@ class DownloadAnalytics(object):
         # are going to make these requests ourselves.
         ga_url = 'https://www.googleapis.com/analytics/v3/data/ga'
         try:
+
             response = requests.get(ga_url, params=params, headers=headers)
+
         except requests.exceptions.RequestException, e:
             log.error("Exception getting GA data: %s" % e)
             raise DownloadError()
@@ -355,6 +362,7 @@ class DownloadAnalytics(object):
             args["sort"] = "-ga:pageviews"
             args["alt"] = "json"
 
+
             results = self._get_ga_data(args)
         except Exception, e:
             log.exception(e)
@@ -373,6 +381,7 @@ class DownloadAnalytics(object):
 
             args["metrics"] = "ga:pageviewsPerVisit,ga:avgTimeOnSite,ga:percentNewVisits,ga:visits"
             args["alt"] = "json"
+
 
             results = self._get_ga_data(args)
         except Exception, e:
@@ -436,6 +445,7 @@ class DownloadAnalytics(object):
             args["sort"] = "-ga:pageviews"
             args["alt"] = "json"
 
+
             results = self._get_ga_data(args)
         except Exception, e:
             log.exception(e)
@@ -473,6 +483,7 @@ class DownloadAnalytics(object):
             args["metrics"] = "ga:totalEvents"
             args["sort"] = "-ga:totalEvents"
             args["alt"] = "json"
+
 
             results = self._get_ga_data(args)
         except Exception, e:
@@ -536,6 +547,8 @@ class DownloadAnalytics(object):
             args['start-date'] = start_date
             args['end-date'] = end_date
 
+
+
             results = self._get_ga_data(args)
         except Exception, e:
             log.exception(e)
@@ -560,6 +573,8 @@ class DownloadAnalytics(object):
                          max_results=10000)
             args['start-date'] = start_date
             args['end-date'] = end_date
+
+
 
             results = self._get_ga_data(args)
         except Exception, e:
@@ -593,6 +608,8 @@ class DownloadAnalytics(object):
 
             args['start-date'] = start_date
             args['end-date'] = end_date
+
+
 
             results = self._get_ga_data(args)
         except Exception, e:
@@ -649,6 +666,7 @@ class DownloadAnalytics(object):
                          max_results=10000)
             args['start-date'] = start_date
             args['end-date'] = end_date
+
 
             results = self._get_ga_data(args)
         except Exception, e:
