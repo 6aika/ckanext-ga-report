@@ -16,8 +16,8 @@
         <tbody>
             {% for row in table %}
                 <tr>
-                    <td><a href="/publisher/{{row['organization name']}}">{{row['organization title']}}</a></td>
-                    <td><a href="/publisher/{{row['top-level organization name']}}">{{row['top-level organization title']}}</a></td>
+                    <td><a href="{{ h.url_for(controller='organization', action='read', id=row['organization name'])}}">{{row['organization title']}}</a></td>
+                    <td><a href="{{ h.url_for(controller='organization', action='read', id=row['top-level organization name'])}}">{{row['top-level organization title']}}</a></td>
                     <td>{{row['All']}}</td>
                 </tr>
             {% endfor %}
