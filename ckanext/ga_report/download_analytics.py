@@ -226,6 +226,7 @@ class DownloadAnalytics(object):
         for entry in results.get('rows'):
             (path, pageviews, visits) = entry
             url = strip_off_host_prefix(path)  # strips off domain e.g. www.data.gov.uk or data.gov.uk
+            url = remove_root_and_lang(url)
 
             if not url.startswith('/dataset/') and not url.startswith('/publisher/'):
                 # filter out strays like:
@@ -720,6 +721,11 @@ def strip_off_host_prefix(url):
         return '/' + '/'.join(url.split('/')[2:])
     return url
 
+def remove_root_and_lang(url):
+    prefix_re = re.compile('/data(?:/[^/]+)?(/dataset/.*)')
+    if prefix_re.match(url):
+        url = prefix_re.match(url).groups()[0]
+    return url
 
 class DownloadError(Exception):
     pass
